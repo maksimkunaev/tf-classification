@@ -2,7 +2,7 @@ import React, { PureComponent, Component } from 'react';
 import styles from './Canvas.styl';
 import container from "components/container";
 import Canvas from 'components/canvas.js/';
-import tf from 'components/sketch1.js/';
+import tf from 'components/sketch.js/';
 import 'antd/dist/antd.css';
 import { Button, notification } from 'antd';
 import Select from 'react-select';
@@ -15,16 +15,12 @@ const options = [
 ];
 
 const labels = {
-    // 0: [1,0,0,0,0,0,0,0,0,0],
-    // 1: [0,1,0,0,0,0,0,0,0,0],
-    // 2: [0,0,1,0,0,0,0,0,0,0],
     0: [1,0,0],
     1: [0,1,0],
     2: [0,0,1],
 }
  
 class CanvasView extends Component {
-
     constructor() {
         super();
         this.state = ({
@@ -32,6 +28,7 @@ class CanvasView extends Component {
             selectedOption: options[0],
         })
     }
+
     componentDidMount() {
         this.initCanvas();
     }
@@ -57,8 +54,7 @@ class CanvasView extends Component {
           label: labels[this.state.selectedOption.value],
         };
         this.props.addElement(element)
-
-        // this.copyToClipboard(vector);
+        this.copyToClipboard(vector);
     }
 
 
@@ -73,7 +69,6 @@ class CanvasView extends Component {
               notification.success({
                 message: 'Copied!',
               });
-
         } 
 
         this.setState({
@@ -113,7 +108,7 @@ class CanvasView extends Component {
                     }
                 }
 
-                tf.train(res, 790);
+                tf.train(res, 10);
             })
     }
 
@@ -121,7 +116,6 @@ class CanvasView extends Component {
         const vector = this.canvas.calculate(true);
         const { index, probability } = tf.predictOne(vector);
         const result = this.classNames[index];
-        console.log(`result, probability`,result, probability)
         print(`${result} ${probability}`)
     }
 

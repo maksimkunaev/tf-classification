@@ -1,7 +1,5 @@
 const tf = require('@tensorflow/tfjs');
 // require('@tensorflow/tfjs-node');
-// const classNames = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-const classNames = ['House', 'Star', 'Cat', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
 const epochs = 3;
 const NUM_OUTPUT_CLASSES = 5;
 const model = getModel();

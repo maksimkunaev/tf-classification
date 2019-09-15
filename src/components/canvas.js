@@ -88,8 +88,6 @@ class Canvas {
 
       filltext = (text = "", xPos, yPos) => {
         const { ctx } = this;
-    console.log('filltext', text, xPos, yPos)
-
         ctx.font = "12px Georgia";
         ctx.fillText(text, xPos, yPos);
       };
@@ -138,9 +136,7 @@ class Canvas {
                     const redColor = data.data[i];
                     const opacity = data.data[i + 3];
 
-                    // if( !isEmpty ) {
-                        nonEmptyPixelsCount += redColor * opacity / 255**2;
-                    // }
+                    nonEmptyPixelsCount += redColor * opacity / 255**2;
                 }
 
                 if( nonEmptyPixelsCount > 1 && draw ) {
