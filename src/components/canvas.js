@@ -88,9 +88,10 @@ class Canvas {
 
       filltext = (text = "", xPos, yPos) => {
         const { ctx } = this;
+    console.log('filltext', text, xPos, yPos)
 
-        ctx.font = "20px Georgia";
-        ctx.fillText(text, xPos + 10, 50);
+        ctx.font = "12px Georgia";
+        ctx.fillText(text, xPos, yPos);
       };
 
 

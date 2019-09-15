@@ -1,37 +1,31 @@
 const quickDraw = require('quickdraw.js');
 const fs = require('fs');
 
-const count = 300;
-const names = ['house', 'star', 'circle'];
-
-const output = {
-    cat:   [1, 0, 0, 0, 0, 0],
-    house: [0, 1, 0, 0, 0, 0],
-    star:     [0, 0, 1, 0, 0, 0],
-    rake:     [0, 0, 0, 1, 0, 0],
-    hourglass:    [0, 0, 0, 0, 1, 0],
-    knife:   [0, 0, 0, 0, 0, 1],
+const count = 400;
+const classNames = ['square', 'star', 'cat', 'circle', 't-shirt'];
+const train_data = {
+    xs: [],
+    labels: [],
+    train_data_size: 0,
+    classNames,
 };
 
-console.log(quickDraw.checkSet('cat'))
-console.log(quickDraw.checkSet('flower'))
-
 let catData = [];
-
 getData(count);
-saveData(catData);
+saveData(train_data);
 
 function getData(count) {
-    const set = quickDraw.set(count, names);
+    const set = quickDraw.set(count, classNames);
 
-    catData = set.set.map(value => ({
-        input: value.input.map(inputValue => Math.round(inputValue * 255)) ,
-        output: value.output,
-    }));
+    catData = set.set;
+    console.log('catData',catData)    
 
-    // set.set.forEach(data => {
-    //     console.log('data.output',data.output )
-    // });
+    catData.forEach(value => {
+        const outputIndex = value.output.findIndex(outputIndex => outputIndex === 1);
+        train_data.xs = train_data.xs.concat(value.input);
+        train_data.labels = train_data.labels.concat(value.output);
+        train_data.train_data_size = train_data.train_data_size + 1;
+    })
 }
 
 function saveData(dataArray) {

@@ -1,7 +1,9 @@
 const tf = require('@tensorflow/tfjs');
 // require('@tensorflow/tfjs-node');
-const classNames = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-const epochs = 190;
+// const classNames = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+const classNames = ['House', 'Star', 'Cat', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+const epochs = 3;
+const NUM_OUTPUT_CLASSES = 5;
 const model = getModel();
 
 function getModel() {
@@ -33,7 +35,6 @@ function getModel() {
   
   model.add(tf.layers.flatten());
 
-  const NUM_OUTPUT_CLASSES = 10;
   model.add(tf.layers.dense({
     units: NUM_OUTPUT_CLASSES,
     kernelInitializer: 'varianceScaling',
@@ -52,7 +53,6 @@ function getModel() {
 
 function getData(data) {
   const IMAGE_SIZE = 784;
-  const NUM_CLASSES = 10;
 
   const batchImagesArray = data.xs;
   const batchLabelsArray = data.labels;
@@ -62,7 +62,7 @@ function getData(data) {
 
   console.log('batchSize',batchSize)
   const xs = tf.tensor2d(batchImagesArray, [batchSize, IMAGE_SIZE]);
-  const labels = tf.tensor2d(batchLabelsArray, [batchSize, NUM_CLASSES]);
+  const labels = tf.tensor2d(batchLabelsArray, [batchSize, NUM_OUTPUT_CLASSES]);
 
   return {
     xs,
@@ -70,7 +70,7 @@ function getData(data) {
   };
 }
 
-function train(data) {
+function train(data, epochs = epochs) {
   const metrics = ['loss', 'val_loss', 'acc', 'val_acc'];
   const container = {
     name: 'Model Training', styles: { height: '1000px' }
@@ -114,27 +114,19 @@ function predictOne(data) {
 
   let maxProbabilityResults = prediction.dataSync();
   const index = prediction.argMax(-1).dataSync()[0];
-  let maxProbability = maxProbabilityResults[index] * 100;
-  const number = classNames[index];
+  let probability = maxProbabilityResults[index] * 100;
+
   prediction.print();
   testxs.dispose();
-  print(`${number}: ${maxProbability}%`)
-  console.log(`\n`)
-}
-
-function print(text) {
-  const style = ['padding: 1rem;',
-      'background: linear-gradient( #403df7, #12981d);',
-      'text-shadow: 0 2px orangered;',
-      'font: 1.3rem/3 Georgia;',
-      'color: white;'].join('');
-
-  console.table( '%c%s', style, text);
+  return {
+    index,
+    probability
+  }
 }
 
 export default {
   predictOne,
-  train,
+  train
 }
 
 
