@@ -26,6 +26,10 @@ class CanvasView extends Component {
         this.state = ({
             value: '',
             selectedOption: options[0],
+            detected: {
+                object: '',
+                probability: '',
+            }
         })
     }
 
@@ -40,11 +44,15 @@ class CanvasView extends Component {
             pixel: 28
         }
 
-        this.canvas = new Canvas(this.canv, settings);
+        this.canvas = new Canvas(this.canv, settings, { callbacks: { onDraw: this.onDraw }} );
     }
 
     onClear = () => {
         this.canvas.clear()
+    }
+
+    onDraw = () => {
+        this.onPredict()
     }
 
     pushData = () => {
@@ -108,15 +116,35 @@ class CanvasView extends Component {
                     }
                 }
 
-                tf.train(res, 10);
+                const callbacks = {
+                    onTrainBegin: () => console.log('start'),
+                    onEpochEnd: (epoch, loss) => {
+                      console.log('Epoch', epoch, 'Loss', loss);
+                    },
+                    onTrainEnd: () => {
+                      console.log('Training comp');
+                    }
+                };
+
+                tf.train(res, { epochs: 190, callbacks });
             })
     }
 
     onPredict = () => {
-        const vector = this.canvas.calculate(true);
-        const { index, probability } = tf.predictOne(vector);
-        const result = this.classNames[index];
-        print(`${result} ${probability}`)
+        const vector = this.canvas.calculate();
+        const { index, probability, error } = tf.predictOne(vector);
+
+        if (error) {
+            console.log(error)
+            return;
+        }
+        const object = this.classNames[index]; 
+        this.setState({
+            detected: {
+                object,
+                probability: probability.toFixed(2),
+            }
+        })
     }
 
     handleChange = selectedOption => {
@@ -124,7 +152,7 @@ class CanvasView extends Component {
     };
 
     render() {
-        const { selectedOption } = this.state;
+        const { selectedOption, detected } = this.state;
 
         return (
               <div className={styles.canvas_view}>
@@ -141,8 +169,13 @@ class CanvasView extends Component {
                     <div className="errors"></div>
                 </div>
 
+                <div className={styles.canvasWrap}>
+                    <canvas id="canv" ref={node => this.canv = node} className={styles.canvas}>Ваш браузер устарел, обновитесь.</canvas>
+                    {detected.object && <p className={styles.detection}><b>{detected.object} <span>{detected.probability}%</span></b></p>} 
+                </div>
+
                 <input id="select-this" ref={node => this.input = node} style={{position: 'absolute', left: -99999 }} value={this.state.value} onChange={()=>{}}/>
-                <canvas id="canv" ref={node => this.canv = node} className={styles.canvas}>Ваш браузер устарел, обновитесь.</canvas>
+
               </div>
         );
     }

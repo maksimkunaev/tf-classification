@@ -3,6 +3,7 @@ const tf = require('@tensorflow/tfjs');
 const epochs = 3;
 const NUM_OUTPUT_CLASSES = 5;
 const model = getModel();
+let isLearned = false;
 
 function getModel() {
   const model = tf.sequential();
@@ -68,19 +69,28 @@ function getData(data) {
   };
 }
 
-function train(data, epochs = epochs) {
+const defaultSettings = {
+  epochs: 10,
+  callbacks: {},
+}
+
+function train(data, settings = defaultSettings) {
+  const { epochs, callbacks: defaultCallbacks } = settings;
+  const { onTrainBegin, onEpochEnd, onTrainEnd } = defaultCallbacks;
+
   const metrics = ['loss', 'val_loss', 'acc', 'val_acc'];
   const container = {
     name: 'Model Training', styles: { height: '1000px' }
   };
 
   const callbacks = {
-      onTrainBegin: () => console.log('start'),
+      onTrainBegin: () => { if (onTrainBegin) onTrainBegin() },
       onEpochEnd: (epoch, log) => {
-          console.log('Epoch', epoch, 'Loss', log.loss);
+          if (onEpochEnd) onEpochEnd(epoch, log.loss)
       },
       onTrainEnd: () => {
-          console.log('Training comp');
+          if (onTrainEnd) onTrainEnd()
+          isLearned = true;
       }
   };
 
@@ -104,6 +114,13 @@ function train(data, epochs = epochs) {
 }
 
 function predictOne(data) {
+  if (!isLearned) {
+    return {
+      error: `Model is not trained!`,
+      index: '',
+      probability: 0
+    }
+  }
   const IMAGE_WIDTH = 28;
   const IMAGE_HEIGHT = 28;
   const testData = tf.tensor2d(data, [784, 1]);
@@ -114,7 +131,7 @@ function predictOne(data) {
   const index = prediction.argMax(-1).dataSync()[0];
   let probability = maxProbabilityResults[index] * 100;
 
-  prediction.print();
+  // prediction.print();
   testxs.dispose();
   return {
     index,

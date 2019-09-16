@@ -1,13 +1,27 @@
+.canvasWrap { 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
 .canvas {
 	display: block;
 	width: 800px;
 	height: 800px;
-	outline: 1px solid;
-	margin: auto;
 	background-color: white;
-	 
 }
 
+.detection {
+    color: #fff;
+    font-size: 22px;
+    padding: 5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    
+    span  {
+        color: green;
+    }
+}
 .controls {
     margin: 10px auto;
     display: flex;

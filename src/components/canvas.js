@@ -1,11 +1,19 @@
+import utils from 'utils';
+const { debounce } = utils;
+
 const defaultSettings = {
     width: 784,
     height: 784,
     pixel: 28,
 };
 
+const defaultConfig = {
+    callbacks: {},
+};
+
+
 class Canvas {
-    constructor(canv, settings = defaultSettings) {
+    constructor(canv, settings = defaultSettings, config) {
         const {
             width,
             height,
@@ -18,10 +26,14 @@ class Canvas {
         this.canv.height = height;
         this.ctx = this.canv.getContext('2d');
         this.pixel = pixel;
-        this.initCanvas();
+        this.initCanvas(config);
       }
 
-      initCanvas = () => {
+      initCanvas = (config = defaultConfig) => {
+
+        const { onDraw } = config.callbacks;
+        const newOnDraw = debounce(onDraw, 150);
+
         let { canv, pixel, ctx, is_mouse_down } = this;
         canv.addEventListener('mousedown', (e) => {
             is_mouse_down = true;
@@ -54,6 +66,10 @@ class Canvas {
 
                 ctx.beginPath();
                 ctx.moveTo(coords.x, coords.y);
+
+                if (onDraw) {
+                    newOnDraw();
+                }
             }
         })
       }
