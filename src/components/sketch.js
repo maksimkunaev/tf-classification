@@ -1,7 +1,7 @@
 const tf = require('@tensorflow/tfjs');
 // require('@tensorflow/tfjs-node');
 const epochs = 3;
-const NUM_OUTPUT_CLASSES = 5;
+const NUM_OUTPUT_CLASSES = 6;
 const model = getModel();
 let isLearned = false;
 
@@ -56,10 +56,7 @@ function getData(data) {
   const batchImagesArray = data.xs;
   const batchLabelsArray = data.labels;
 
-  console.log(batchImagesArray)
   const batchSize = data.train_data_size;
-
-  console.log('batchSize',batchSize)
   const xs = tf.tensor2d(batchImagesArray, [batchSize, IMAGE_SIZE]);
   const labels = tf.tensor2d(batchLabelsArray, [batchSize, NUM_OUTPUT_CLASSES]);
 

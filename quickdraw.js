@@ -2,7 +2,7 @@ const quickDraw = require('quickdraw.js');
 const fs = require('fs');
 
 const count = 400;
-const classNames = ['square', 'star', 'cat', 'circle', 't-shirt'];
+const classNames = ['square', 'star', 'cat', 'circle', 't-shirt', 'tent'];
 const train_data = {
     xs: [],
     labels: [],
@@ -18,8 +18,6 @@ function getData(count) {
     const set = quickDraw.set(count, classNames);
 
     catData = set.set;
-    console.log('catData',catData)    
-
     catData.forEach(value => {
         const outputIndex = value.output.findIndex(outputIndex => outputIndex === 1);
         train_data.xs = train_data.xs.concat(value.input);
@@ -35,6 +33,6 @@ function saveData(dataArray) {
         if(err) {
             return console.log(err);
         }
-        console.log("The file was saved in", savedFile);
+        // console.log("The file was saved in", savedFile);
     });
 }
