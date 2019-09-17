@@ -7,6 +7,8 @@ import 'antd/dist/antd.css';
 import { Button, notification } from 'antd';
 import Select from 'react-select';
 const PICTIRE_SIZE = 784;
+import utils from 'utils';
+const { fetchData } = utils;
 
 const options = [
   { value: '0', label: 'zero' },
@@ -15,9 +17,9 @@ const options = [
 ];
 
 const labels = {
-    0: [1,0,0],
-    1: [0,1,0],
-    2: [0,0,1],
+    0: [1,0,0,0,0,0],
+    1: [0,1,0,0,0,0],
+    2: [0,0,1,0,0,0],
 }
  
 class CanvasView extends Component {
@@ -42,16 +44,17 @@ class CanvasView extends Component {
         this.initCanvas();
     }
 
-    initCanvas = () => {
+    initCanvas = async () => {
         const settings = {
             width: PICTIRE_SIZE,
             height: PICTIRE_SIZE,
             pixel: 28
-        }
+        };
 
         this.canvas = new Canvas(this.canv, settings, { callbacks: { onDraw: this.onDraw }} );
-
-        this.startTrain();
+        const data = await fetchData('assets/data/data.json', PICTIRE_SIZE);
+        this.showPreview(data)
+        this.train(data, 180)
     }
 
     onClear = () => {
@@ -72,8 +75,7 @@ class CanvasView extends Component {
         this.copyToClipboard(vector);
     }
 
-
-   copyToClipboard = vector => {
+    copyToClipboard = vector => {
         const inputElement = this.input;
 
         const copy = () => {
@@ -92,90 +94,69 @@ class CanvasView extends Component {
     }
 
     startTrain = () => {
-        this.fetchData()
+        this.train(this.props.data, 100);
+        this.classNames = this.props.data.classNames
     }
 
-    fetchData = () => {
-        const that = this;
+    showPreview = async (data) => {
+        this.classNames = data.classNames;
+        let labelIndex = 0;
+        const NUM_CLASSES = data.classNames.length;
 
-        fetch('assets/data/data.json')
-            .then(res => res.json())
-            .then(res => {
-                this.classNames = res.classNames;
-                let labelIndex = 0;
-                const NUM_CLASSES = res.classNames.length
+        let xPos = 0;
+        let yPos = 10;
 
-                let xPos = 0;
-                let yPos = 10;
+        for (let i = 0; i < data.xs.length; i = i + PICTIRE_SIZE) {
+            const picture_data = data.xs.slice(i, i + PICTIRE_SIZE);
+            const label = data.labels.slice(labelIndex, labelIndex + NUM_CLASSES);
 
-                for (let i = 0; i < res.xs.length; i = i + PICTIRE_SIZE) {
-                    const picture_data = res.xs.slice(i, i + PICTIRE_SIZE);
-                    const label = res.labels.slice(labelIndex, labelIndex + NUM_CLASSES);
+            labelIndex = labelIndex + NUM_CLASSES;
+            const foundIndex = label.findIndex(value => value === 1)
+            this.canvas.drawPicture(picture_data.map(value=>value ? 255 : 0), xPos, yPos);
+            this.canvas.filltext(this.classNames[foundIndex], xPos, yPos)
 
-                    labelIndex = labelIndex + NUM_CLASSES;
-                    const foundIndex = label.findIndex(value => value === 1)
-                    this.canvas.drawPicture(picture_data.map(value=>value ? 255 : 0), xPos, yPos);
-                    this.canvas.filltext(this.classNames[foundIndex], xPos, yPos)
+            xPos = xPos + 50;
+            if (xPos > this.canv.width) {
+                xPos = 0;
+                yPos = yPos + 50;
+            }
+        }
+    };
 
-                    xPos = xPos + 50;
-                    if (xPos > this.canv.width) {
-                        xPos = 0;
-                        yPos = yPos + 50;
+    train = (data, epochs) => {
+        const startTime = Date.now();
+        const callbacks = {
+            onTrainBegin: () => console.log('start'),
+            onEpochEnd: (epoch, loss) => {
+                this.setState({
+                    learning: {
+                        status: 'learning',
+                        percent: (epoch * 100 / epochs).toFixed(2),
+                        loss: loss.toFixed(4),
                     }
-                }
+                })
+            },
+            onTrainEnd: () => {
+                const time = (Date.now() - startTime)/1000;
+                console.log('Training comp. Time:', time, 's');
+                this.setState({
+                    learning: {
+                        status: 'finished',
+                        percent: 100,
+                        loss: this.state.learning.loss
+                    }
+                })
+            }
+        };
 
-                const data = { ...res };
-
-                const batchImagesArray = new Float32Array(res.train_data_size * PICTIRE_SIZE);
-                for (let i = 0; i < res.xs.length; i = i + PICTIRE_SIZE) {
-                    const image = res.xs.slice(i, i + PICTIRE_SIZE);
-                    batchImagesArray.set(image, i);
-                }
-
-                const typedData = {
-                    ...res,
-                    xs: batchImagesArray,
-                    labels: Uint8Array.from(res.labels),
-                };
-
-                train(typedData, 750);
-
-                function train(data, epochs) {
-                    const startTime = Date.now();
-                    const callbacks = {
-                        onTrainBegin: () => console.log('start'),
-                        onEpochEnd: (epoch, loss) => {
-                            that.setState({
-                                learning: {
-                                    status: 'learning',
-                                    percent: (epoch * 100 / epochs).toFixed(2),
-                                    loss: loss.toFixed(4),
-                                }
-                            })
-                        },
-                        onTrainEnd: () => {
-                            const time = (Date.now() - startTime)/1000;
-                            console.log('Training comp. Time:', time, 's');
-                            that.setState({
-                                learning: {
-                                    status: 'finished',
-                                    percent: 100,
-                                    loss: that.state.learning.loss
-                                }
-                            })
-                        }
-                    };
-
-                    tf.train(typedData, { epochs, callbacks });
-                    that.setState({
-                        learning: {
-                            status: 'learning',
-                            percent: 0,
-                            loss: 0,
-                        }
-                    })
-                }
-            })
+        tf.train(data, { epochs, callbacks });
+        this.setState({
+            learning: {
+                status: 'learning',
+                percent: 0,
+                loss: 0,
+            }
+        })
     };
 
     onPredict = () => {
@@ -183,7 +164,7 @@ class CanvasView extends Component {
         const { index, probability, error } = tf.predictOne(vector);
 
         if (error) {
-            console.log(error)
+            console.log(error);
             return;
         }
         const object = this.classNames[index]; 
@@ -204,22 +185,21 @@ class CanvasView extends Component {
         const { status, percent, loss } = learning;
 
         return (
-              <div className={styles.canvas_view}>
+            <div className={styles.canvas_view}>
                 <div className={styles.controls}>
                     <button className={styles.control} onClick={this.onClear}>Clear</button>
                     <button className={styles.control} onClick={this.pushData}>Push</button>
                     <button className={styles.control} onClick={this.startTrain}>Train</button>
                     <button className={styles.control} onClick={this.onPredict}>Predict</button>
                     <Select
-                    value={selectedOption}
-                    onChange={this.handleChange}
-                    options={options}
+                        value={selectedOption}
+                        onChange={this.handleChange}
+                        options={options}
                     />
                 </div>
 
                 <div className={styles.canvasWrap}>
                     <canvas id="canv" ref={node => this.canv = node} className={styles.canvas}>Ваш браузер устарел, обновитесь.</canvas>
-
                     <div>
                         {status ==='init' && <p className={styles.detection}>Wait until training starts...</p>}
                         {status ==='learning' && <p className={styles.detection}>
@@ -236,19 +216,9 @@ class CanvasView extends Component {
                     </div>
                 </div>
                 <input id="select-this" ref={node => this.input = node} style={{position: 'absolute', left: -99999 }} value={this.state.value} onChange={()=>{}}/>
-              </div>
+            </div>
         );
     }
-}
-
-function print(text) {
-  const style = ['padding: 1rem;',
-      'background: linear-gradient( #403df7, #12981d);',
-      'text-shadow: 0 2px orangered;',
-      'font: 1.3rem/3 Georgia;',
-      'color: white;'].join('');
-
-  console.table( '%c%s', style, text);
 }
 
 export default container(CanvasView);
