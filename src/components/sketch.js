@@ -4,7 +4,7 @@ const epochs = 3;
 const NUM_OUTPUT_CLASSES = 6;
 const model = getModel();
 let isLearned = false;
-
+window.tf = tf;
 function getModel() {
   const model = tf.sequential();
   
@@ -47,6 +47,7 @@ function getModel() {
     metrics: ['accuracy'],
   });
 
+  // window.model = model;
   return model;
 }
 
@@ -101,7 +102,7 @@ function train(data, settings = defaultSettings) {
       d.labels
     ];
   });
-
+  console.log(111 ,epochs);
   return model.fit(trainXs, trainYs, {
     batchSize: BATCH_SIZE,
     epochs,

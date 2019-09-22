@@ -42,6 +42,7 @@ class CanvasView extends Component {
 
     componentDidMount() {
         this.initCanvas();
+        document.addEventListener('keydown', this.handleKeyPress)
     }
 
     initCanvas = async () => {
@@ -54,7 +55,7 @@ class CanvasView extends Component {
         this.canvas = new Canvas(this.canv, settings, { callbacks: { onDraw: this.onDraw }} );
         const data = await fetchData('assets/data/data.json', PICTIRE_SIZE);
         this.showPreview(data)
-        this.train(data, 180)
+        this.train(data, 150)
     }
 
     onClear = () => {
@@ -128,6 +129,8 @@ class CanvasView extends Component {
         const callbacks = {
             onTrainBegin: () => console.log('start'),
             onEpochEnd: (epoch, loss) => {
+                console.log('loss',loss),
+
                 this.setState({
                     learning: {
                         status: 'learning',
@@ -180,6 +183,14 @@ class CanvasView extends Component {
         this.setState({ selectedOption });
     };
 
+    handleKeyPress = e => {
+        if (e.code  === 'KeyC') {
+            this.onClear();
+        }
+    };
+
+
+
     render() {
         const { selectedOption, detected, learning } = this.state;
         const { status, percent, loss } = learning;
@@ -199,7 +210,7 @@ class CanvasView extends Component {
                 </div>
 
                 <div className={styles.canvasWrap}>
-                    <canvas id="canv" ref={node => this.canv = node} className={styles.canvas}>Ваш браузер устарел, обновитесь.</canvas>
+                    <canvas id="canv" ref={node => this.canv = node} className={styles.canvas} onKeyPress={this.handleKeyPress}>Ваш браузер устарел, обновитесь.</canvas>
                     <div>
                         {status ==='init' && <p className={styles.detection}>Wait until training starts...</p>}
                         {status ==='learning' && <p className={styles.detection}>
