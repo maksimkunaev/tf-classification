@@ -8,7 +8,7 @@ import { notification } from 'antd';
 import Select from 'react-select';
 const PICTIRE_SIZE = 784;
 import utils from 'utils';
-const { fetchData } = utils;
+const { fetchData, detectmob } = utils;
 
 const options = [
   { value: '0', label: 'zero' },
@@ -45,7 +45,7 @@ class CanvasView extends Component {
         this.initTouchEvents();
         document.addEventListener('keydown', this.handleKeyPress)
         let width = Math.min(window.innerWidth, window.innerHeight);
-        this.width = window.innerWidth > 500 ? 0.8 * width : width;
+        this.width = window.innerWidth > 1000 ? 0.8 * width : width;
     }
 
     initCanvas = async () => {
@@ -55,7 +55,8 @@ class CanvasView extends Component {
             pixel: 28
         };
 
-        this.canvas = new Canvas(this.canv, settings, { callbacks: { onDraw: this.onDraw }} );
+        console.log('!detectmob()',!detectmob())
+        this.canvas = new Canvas(this.canv, settings, { callbacks: { onDraw: !detectmob() ? this.onDraw : null }} );
         const data = await fetchData('assets/data/data.json', PICTIRE_SIZE);
         this.showPreview(data)
         this.props.changeStatus({ type: 'training'})
