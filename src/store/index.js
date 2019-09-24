@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux';
 
 const initialState = {
+    status: 'init',
     data: {
         xs: [],
         labels: [],
@@ -23,8 +24,21 @@ function changeData(state = initialState.data, action) {
     return state;
 }
 
+function changeStatus(state = initialState.status, action) {
+    switch (action.type) {
+        case 'training':
+           return 'training'
+
+        case 'trained':
+            return 'trained'
+    }
+
+    return state;
+}
+
 export default combineReducers({
     data: changeData,
+    status: changeStatus
 })
 
 

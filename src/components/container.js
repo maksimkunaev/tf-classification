@@ -2,15 +2,20 @@ import React from 'react';
 import {connect} from 'react-redux';
 
 const mapStateToProps = state => ({
-    data: state.data,
+  data: state.data,
+  status: state.status,
 })
 
 const mapDispatchToProps = dispatch => ({
   addElement: (data) => {
-    console.log('dispatch')
     dispatch({
       type: 'addElement',
       data,
+    })
+  },
+  changeStatus: (data) => {
+    dispatch({
+      type: data.type,
     })
   },
 })

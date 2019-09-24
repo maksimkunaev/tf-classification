@@ -105,6 +105,7 @@ class Canvas {
       filltext = (text = "", xPos, yPos) => {
         const { ctx } = this;
         ctx.font = "12px Georgia";
+        ctx.fillStyle = "#fff";
         ctx.fillText(text, xPos, yPos);
       };
 

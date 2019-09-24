@@ -4,7 +4,7 @@ import container from "components/container";
 import Canvas from 'components/canvas.js/';
 import tf from 'components/sketch.js/';
 import 'antd/dist/antd.css';
-import { Button, notification } from 'antd';
+import { notification } from 'antd';
 import Select from 'react-select';
 const PICTIRE_SIZE = 784;
 import utils from 'utils';
@@ -42,7 +42,10 @@ class CanvasView extends Component {
 
     componentDidMount() {
         this.initCanvas();
+        this.initTouchEvents();
         document.addEventListener('keydown', this.handleKeyPress)
+        let width = Math.min(window.innerWidth, window.innerHeight);
+        this.width = window.innerWidth > 500 ? 0.8 * width : width;
     }
 
     initCanvas = async () => {
@@ -55,7 +58,9 @@ class CanvasView extends Component {
         this.canvas = new Canvas(this.canv, settings, { callbacks: { onDraw: this.onDraw }} );
         const data = await fetchData('assets/data/data.json', PICTIRE_SIZE);
         this.showPreview(data)
-        this.train(data, 150)
+        this.props.changeStatus({ type: 'training'})
+
+        this.train(data, 15)
     }
 
     onClear = () => {
@@ -149,6 +154,7 @@ class CanvasView extends Component {
                         loss: this.state.learning.loss
                     }
                 })
+                this.props.changeStatus({ type: 'trained'})
             }
         };
 
@@ -189,11 +195,33 @@ class CanvasView extends Component {
         }
     };
 
+    initTouchEvents() {
+        function touchHandler(event) {
+            const touch = event.changedTouches[0];
 
+            const simulatedEvent = document.createEvent("MouseEvent");
+            simulatedEvent.initMouseEvent({
+                    touchstart: "mousedown",
+                    touchmove: "mousemove",
+                    touchend: "mouseup"
+                }[event.type], true, true, window, 1,
+                touch.screenX, touch.screenY,
+                touch.clientX, touch.clientY, false,
+                false, false, false, 0, null);
+
+            touch.target.dispatchEvent(simulatedEvent);
+        }
+
+        document.addEventListener("touchstart", touchHandler, true);
+        document.addEventListener("touchmove", touchHandler, true);
+        document.addEventListener("touchend", touchHandler, true);
+        document.addEventListener("touchcancel", touchHandler, true);
+    }
 
     render() {
         const { selectedOption, detected, learning } = this.state;
         const { status, percent, loss } = learning;
+        const { width } = this;
 
         return (
             <div className={styles.canvas_view}>
@@ -209,13 +237,13 @@ class CanvasView extends Component {
                     />
                 </div>
 
-                <div className={styles.canvasWrap}>
+                <div className={styles.canvasWrap} style={{width, height: width}}>
                     <canvas id="canv" ref={node => this.canv = node} className={styles.canvas} onKeyPress={this.handleKeyPress}>Ваш браузер устарел, обновитесь.</canvas>
                     <div>
                         {status ==='init' && <p className={styles.detection}>Wait until training starts...</p>}
                         {status ==='learning' && <p className={styles.detection}>
-                            Training in progress <span style={{color: 'blue'}}>{percent}%</span><br />
-                            Error <span style={{color: 'blue'}}>{loss}</span><br />
+                            Training in progress <span style={{color: '#69696d'}}>{percent}%</span><br />
+                            Error <span style={{color: '#69696d'}}>{loss}</span><br />
                         </p>}
 
                         {status ==='finished' && <p className={styles.detection}>
