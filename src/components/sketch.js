@@ -102,7 +102,6 @@ function train(data, settings = defaultSettings) {
       d.labels
     ];
   });
-  console.log(111 ,epochs);
   return model.fit(trainXs, trainYs, {
     batchSize: BATCH_SIZE,
     epochs,

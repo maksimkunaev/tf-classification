@@ -99,7 +99,7 @@ class Canvas {
       };
 
       clear = () => {
-        this.ctx.clearRect(0, 0, canv.width, canv.height);
+        this.ctx.clearRect(0, 0, this.canv.width, this.canv.height);
       };
 
       filltext = (text = "", xPos, yPos) => {
